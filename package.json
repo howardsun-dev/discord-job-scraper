@@ -1,0 +1,31 @@
+{
+  "name": "discord-job-scraper",
+  "version": "0.1.0",
+  "description": "Discord bot that scrapes job sites and posts matching listings to channels",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": ["discord", "bot", "job-scraper", "automation"],
+  "author": "Howard Sun",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.1.0",
+    "eslint": "^9.16.0",
+    "@eslint/js": "^9.16.0",
+    "typescript-eslint": "^8.45.0"
+  }
+}
