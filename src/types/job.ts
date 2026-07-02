@@ -1,17 +1,3 @@
-export interface JobListing {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  description: string;
-  url: string;
-  source: JobSource;
-  postedDate: Date;
-  salary?: string;
-  remote: boolean;
-  keywords: string[];
-}
-
 export type JobSource = 'indeed' | 'linkedin' | 'glassdoor' | 'reddit';
 
 export interface JobSearchFilters {
