@@ -19,7 +19,7 @@
 
 ## 🎯 Current Status
 
-🟡 **In Development** - Core Discord bot functionality implemented with `/ping` and `/jobs` commands. Next phase adds job scraping, filtering, and persistence.
+🟡 **In Development** - Core Discord bot functionality plus Episode 2 scraping foundation implemented. The bot now has configurable slash-command job search, scraper classes for Indeed/LinkedIn/Glassdoor, PostgreSQL persistence/deduplication, scheduled scraping, and a manual scrape CLI.
 
 ## ✨ Planned Features
 
@@ -193,12 +193,30 @@ npm run lint
 # Type checking
 npm run typecheck
 
-# Unit tests (when implemented)
+# Unit tests
 npm test
 
-# End-to-end tests (planned)
-npm run test:e2e
+# Build production JavaScript
+npm run build
+
+# Manual scrape after configuring PostgreSQL and .env
+npm run scrape -- "software engineer" "remote"
 ```
+
+## 🧩 Episode 2 Implementation
+
+The current implementation adds:
+
+- `src/scrapers/BaseScraper.ts` - shared Puppeteer/Cheerio scraper foundation with rate limiting and user-agent rotation.
+- `src/scrapers/IndeedScraper.ts` - Indeed search scraper.
+- `src/scrapers/LinkedInScraper.ts` - LinkedIn public jobs scraper.
+- `src/scrapers/GlassdoorScraper.ts` - Glassdoor scraper.
+- `src/services/JobService.ts` - PostgreSQL persistence, deduplication, filtering, and posted-state tracking.
+- `src/jobs/ScraperScheduler.ts` - configurable cron-based scheduled scraping.
+- `src/scripts/scrape.ts` - manual CLI scrape runner.
+- `docker-compose.yml` - local PostgreSQL for development.
+
+> Note: job-board HTML changes frequently and major boards may rate-limit or block scraping. The scraper layer is isolated so selector updates stay localized per source.
 
 ## 📚 Skills Demonstrated
 

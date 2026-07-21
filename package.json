@@ -9,23 +9,40 @@
     "start": "node dist/index.js",
     "lint": "eslint src/",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "scrape": "tsx src/scripts/scrape.ts"
   },
-  "keywords": ["discord", "bot", "job-scraper", "automation"],
+  "keywords": [
+    "discord",
+    "bot",
+    "job-scraper",
+    "automation"
+  ],
   "author": "Howard Sun",
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
     "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "node-cron": "^4.2.1",
+    "pg": "^8.21.0",
+    "puppeteer": "^25.1.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.30",
+    "user-agents": "^2.1.87"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
-    "typescript": "^5.8.0",
-    "tsx": "^4.19.0",
-    "vitest": "^3.1.0",
-    "eslint": "^9.16.0",
     "@eslint/js": "^9.16.0",
-    "typescript-eslint": "^8.45.0"
+    "@types/node": "^22.15.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.20.0",
+    "eslint": "^9.16.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.45.0",
+    "vitest": "^3.1.0"
   }
 }
