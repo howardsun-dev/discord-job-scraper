@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildSearchUrl,
   cleanText,
+  escapeLikePattern,
   extractSalary,
   generateExternalId,
   isRemote,
@@ -88,5 +89,9 @@ describe('helper utilities', () => {
     expect(positiveInteger('-2', 1)).toBe(1);
     expect(positiveInteger('1.5', 1)).toBe(1);
     expect(positiveInteger('nope', 1)).toBe(1);
+  });
+
+  it('escapes SQL LIKE wildcard characters', () => {
+    expect(escapeLikePattern('100%_remote!')).toBe('100!%!_remote!!');
   });
 });

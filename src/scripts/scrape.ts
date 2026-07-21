@@ -4,6 +4,7 @@ import { scraperManager } from '../scrapers/index.js';
 import { jobService } from '../services/JobService.js';
 import { JobSource } from '../types/job.js';
 import { positiveInteger } from '../utils/helpers.js';
+import { closeDatabase } from '../database/index.js';
 
 const keywords = process.argv[2] || process.env.DEFAULT_KEYWORDS || 'software engineer';
 const location = process.argv[3] || process.env.DEFAULT_LOCATION || 'remote';
@@ -14,8 +15,9 @@ async function main() {
 
   try {
     await jobService.initialize();
-    await scraperManager.initialize();
-    const jobs = await scraperManager.scrapeAllSources(keywords, location, {}, maxPages);
+    const jobs = await scraperManager.runExclusive((manager) =>
+      manager.scrapeAllSources(keywords, location, {}, maxPages)
+    );
     const bySource = new Map<JobSource, typeof jobs>();
 
     for (const job of jobs) {
@@ -33,7 +35,7 @@ async function main() {
     const stats = await jobService.getJobStats();
     console.log(`📊 Done: ${stats.total} total jobs, ${stats.unposted} unposted`);
   } finally {
-    await scraperManager.close();
+    await closeDatabase();
   }
 }
 

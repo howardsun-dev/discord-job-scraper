@@ -21,7 +21,7 @@ describeWithDatabase('JobService PostgreSQL integration', () => {
         company: 'Example Co',
         location: 'Remote',
         description: 'Build TypeScript applications',
-        url: 'https://example.com/jobs/1',
+        url: `https://example.com/jobs/1?tracking=${'x'.repeat(1100)}`,
         postedDate: null,
       },
       {
@@ -39,7 +39,7 @@ describeWithDatabase('JobService PostgreSQL integration', () => {
       company: 'Example Co',
       location: 'Remote',
       description: 'Build TypeScript applications',
-      url: 'https://example.com/jobs/1',
+      url: `https://example.com/jobs/1?tracking=${'x'.repeat(1100)}`,
       postedDate: null,
     }], 'indeed');
 
@@ -52,6 +52,9 @@ describeWithDatabase('JobService PostgreSQL integration', () => {
     expect(stats.total).toBe(2);
     expect(matches).toHaveLength(2);
     expect(matches.some((job) => job.postedDate === null)).toBe(true);
-    expect(matches.find((job) => job.url.endsWith('/1'))?.title).toBe('Senior React Engineer');
+    expect(matches.find((job) => job.company === 'Example Co')?.title).toBe('Senior React Engineer');
+
+    const wildcardMatches = await jobService.findJobs({ keywords: ['%_'] });
+    expect(wildcardMatches).toEqual([]);
   });
 });

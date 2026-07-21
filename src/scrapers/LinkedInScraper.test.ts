@@ -27,6 +27,7 @@ describe('LinkedInScraper', () => {
       title: 'Software Engineer',
       company: 'Example Co',
       location: 'Remote',
+      description: 'Software Engineer at Example Co',
       url: 'https://www.linkedin.com/jobs/view/123',
       postedDate: new Date(2026, 6, 18),
     });

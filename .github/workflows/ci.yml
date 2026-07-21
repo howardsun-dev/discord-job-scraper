@@ -30,7 +30,8 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       RUN_DB_TESTS: "true"
-      NODE_ENV: test
+      NODE_ENV: production
+      DB_RUN_MIGRATIONS: "true"
       DB_HOST: localhost
       DB_PORT: 5432
       DB_USER: postgres

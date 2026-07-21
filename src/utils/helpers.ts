@@ -134,3 +134,7 @@ export function positiveInteger(value: string | undefined, fallback: number): nu
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
+
+export function escapeLikePattern(value: string): string {
+  return value.replace(/[!%_]/g, '!$&');
+}

@@ -1,7 +1,7 @@
 import { getJobRepository, initializeDatabase } from '../database/index.js';
 import { Job } from '../database/Job.js';
 import { ScrapedJobData, JobSource, JobSearchFilters } from '../types/job.js';
-import { generateExternalId, isRemote } from '../utils/helpers.js';
+import { escapeLikePattern, generateExternalId, isRemote } from '../utils/helpers.js';
 import { In, LessThan } from 'typeorm';
 
 export class JobService {
@@ -79,10 +79,12 @@ export class JobService {
 
     if (filters.keywords && filters.keywords.length > 0) {
       const conditions = filters.keywords.map((_, i) =>
-        `(job.title ILIKE :kw${i} OR job.description ILIKE :kw${i} OR job.company ILIKE :kw${i} OR job.keywords ILIKE :kw${i})`
+        `(job.title ILIKE :kw${i} ESCAPE '!' OR job.description ILIKE :kw${i} ESCAPE '!' OR job.company ILIKE :kw${i} ESCAPE '!')`
       );
       qb.andWhere(`(${conditions.join(' OR ')})`);
-      filters.keywords.forEach((keyword, i) => qb.setParameter(`kw${i}`, `%${keyword}%`));
+      filters.keywords.forEach((keyword, i) =>
+        qb.setParameter(`kw${i}`, `%${escapeLikePattern(keyword)}%`)
+      );
     }
 
     if (filters.location) {

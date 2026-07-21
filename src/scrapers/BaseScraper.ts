@@ -109,6 +109,7 @@ export abstract class BaseScraper {
         } else {
           html = await this.fetchWithAxios(url);
         }
+        this.assertNotBlocked(html, url);
 
         const $ = this.parseWithCheerio(html);
         const jobElements = $(this.config.selectors.jobCard);
@@ -135,7 +136,7 @@ export abstract class BaseScraper {
         }
       } catch (error) {
         console.error(`[${this.getSource()}] Error scraping page ${page}:`, error);
-        break;
+        throw error;
       }
     }
 
@@ -155,6 +156,20 @@ export abstract class BaseScraper {
 
   protected requiresBrowser(): boolean {
     return true;
+  }
+
+  protected assertNotBlocked(html: string, url: string): void {
+    const lower = html.toLowerCase();
+    const blockedMarkers = [
+      'blocked - indeed.com',
+      '>humans only<',
+      'cloudflare security challenge',
+      'cf-chl-',
+      'captcha-delivery.com',
+    ];
+    if (blockedMarkers.some((marker) => lower.includes(marker))) {
+      throw new Error(`[${this.getSource()}] Anti-bot challenge received for ${url}`);
+    }
   }
 
   protected generateExternalId(url: string): string {

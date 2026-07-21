@@ -9,6 +9,7 @@ const DEFAULT_SCRAPER_SOURCES: JobSource[] = ['indeed', 'linkedin', 'glassdoor']
 export class ScraperManager {
   private scrapers: Map<JobSource, BaseScraper> = new Map();
   private initialized = false;
+  private operationTail: Promise<void> = Promise.resolve();
 
   constructor() {
     this.scrapers.set('indeed', new IndeedScraper());
@@ -50,6 +51,26 @@ export class ScraperManager {
     return Array.from(this.scrapers.values());
   }
 
+  async runExclusive<T>(operation: (manager: ScraperManager) => Promise<T>): Promise<T> {
+    const previousOperation = this.operationTail;
+    let release!: () => void;
+    this.operationTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+
+    await previousOperation;
+    try {
+      await this.initialize();
+      return await operation(this);
+    } finally {
+      try {
+        await this.close();
+      } finally {
+        release();
+      }
+    }
+  }
+
   async scrapeAllSources(
     keywords: string,
     location: string,
@@ -58,6 +79,7 @@ export class ScraperManager {
   ): Promise<ScrapedJobData[]> {
     const sources = filters.sources || DEFAULT_SCRAPER_SOURCES;
     const allJobs: ScrapedJobData[] = [];
+    const failures: Error[] = [];
 
     for (const source of sources) {
       const scraper = this.scrapers.get(source);
@@ -73,7 +95,12 @@ export class ScraperManager {
         allJobs.push(...jobs);
       } catch (error) {
         console.error(`❌ Error scraping ${source}:`, error);
+        failures.push(error instanceof Error ? error : new Error(String(error)));
       }
+    }
+
+    if (allJobs.length === 0 && failures.length > 0) {
+      throw new AggregateError(failures, 'All requested scraper sources failed');
     }
 
     return allJobs;

@@ -60,44 +60,41 @@ export class ScraperScheduler {
 
   async runScrape(config: ScraperJobConfig): Promise<void> {
     try {
-      await scraperManager.initialize();
       await jobService.initialize();
+      await scraperManager.runExclusive(async (manager) => {
+        for (const keyword of config.keywords) {
+          console.log(`🔍 Searching for: ${keyword}`);
 
-      for (const keyword of config.keywords) {
-        console.log(`🔍 Searching for: ${keyword}`);
-        
-        const jobs = await scraperManager.scrapeAllSources(
-          keyword,
-          config.location,
-          config.filters,
-          config.maxPages
-        );
+          const jobs = await manager.scrapeAllSources(
+            keyword,
+            config.location,
+            config.filters,
+            config.maxPages
+          );
 
-        if (jobs.length > 0) {
-          // Group by source and save
-          const bySource = new Map<JobSource, ScrapedJobData[]>();
-          for (const job of jobs) {
-            if (job.source) {
-              const sourceJobs = bySource.get(job.source) || [];
-              sourceJobs.push(job);
-              bySource.set(job.source, sourceJobs);
+          if (jobs.length > 0) {
+            const bySource = new Map<JobSource, ScrapedJobData[]>();
+            for (const job of jobs) {
+              if (job.source) {
+                const sourceJobs = bySource.get(job.source) || [];
+                sourceJobs.push(job);
+                bySource.set(job.source, sourceJobs);
+              }
+            }
+
+            for (const [source, sourceJobs] of bySource) {
+              const saved = await jobService.saveJobs(sourceJobs, source);
+              console.log(`💾 Saved ${saved.length} jobs from ${source}`);
             }
           }
-
-          for (const [source, sourceJobs] of bySource) {
-            const saved = await jobService.saveJobs(sourceJobs, source);
-            console.log(`💾 Saved ${saved.length} jobs from ${source}`);
-          }
         }
-      }
+      });
 
       const stats = await jobService.getJobStats();
       console.log(`📊 Job stats: ${stats.total} total, ${stats.unposted} unposted`);
       console.log('   By source:', stats.bySource);
     } catch (error) {
       console.error('❌ Scheduled scrape failed:', error);
-    } finally {
-      await scraperManager.close();
     }
   }
 

@@ -29,7 +29,7 @@ export class Job {
   @Column({ type: 'text' })
   description!: string;
 
-  @Column({ type: 'varchar', length: 1000 })
+  @Column({ type: 'text' })
   url!: string;
 
   @Column({

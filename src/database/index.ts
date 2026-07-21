@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Job } from './Job.js';
+import { CreateJobsTable1784650000000 } from './migrations/1784650000000-CreateJobsTable.js';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const config: DataSourceOptions = {
   type: 'postgres',
@@ -11,7 +14,9 @@ const config: DataSourceOptions = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'jobscraper',
   entities: [Job],
-  synchronize: process.env.NODE_ENV !== 'production',
+  migrations: [CreateJobsTable1784650000000],
+  migrationsRun: isProduction && process.env.DB_RUN_MIGRATIONS !== 'false',
+  synchronize: !isProduction,
   logging: process.env.NODE_ENV === 'development',
   ssl: process.env.DB_SSL === 'true'
     ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
@@ -39,4 +44,8 @@ export function getJobRepository() {
     throw new Error('Database not initialized: call initializeDatabase() before getJobRepository()');
   }
   return AppDataSource.getRepository(Job);
+}
+
+export async function closeDatabase(): Promise<void> {
+  if (AppDataSource.isInitialized) await AppDataSource.destroy();
 }

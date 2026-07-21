@@ -55,28 +55,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
       try {
         if (scrapeNow) {
           await interaction.editReply('🔍 Scraping job boards now. This can take a minute...');
-          await scraperManager.initialize();
-          try {
-            const scrapedJobs = await scraperManager.scrapeAllSources(
+          const scrapedJobs = await scraperManager.runExclusive((manager) =>
+            manager.scrapeAllSources(
               keywords,
               location,
               selectedSource ? { sources: [selectedSource] } : {},
               1
-            );
+            )
+          );
 
-            const bySource = new Map<JobSource, typeof scrapedJobs>();
-            for (const job of scrapedJobs) {
-              if (!job.source) continue;
-              const sourceJobs = bySource.get(job.source) || [];
-              sourceJobs.push(job);
-              bySource.set(job.source, sourceJobs);
-            }
+          const bySource = new Map<JobSource, typeof scrapedJobs>();
+          for (const job of scrapedJobs) {
+            if (!job.source) continue;
+            const sourceJobs = bySource.get(job.source) || [];
+            sourceJobs.push(job);
+            bySource.set(job.source, sourceJobs);
+          }
 
-            for (const [jobSource, sourceJobs] of bySource) {
-              await jobService.saveJobs(sourceJobs, jobSource);
-            }
-          } finally {
-            await scraperManager.close();
+          for (const [jobSource, sourceJobs] of bySource) {
+            await jobService.saveJobs(sourceJobs, jobSource);
           }
         }
 

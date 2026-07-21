@@ -61,7 +61,7 @@ export class LinkedInScraper extends BaseScraper {
     const title = cleanText(titleEl.text());
     const company = cleanText(companyEl.text());
     const location = cleanText(locationEl.text());
-    const description = cleanText(descEl.text());
+    const description = cleanText(descEl.text()) || `${title} at ${company}`;
     const href = urlEl.attr('href');
     const url = href ? href.split('?')[0] : '';
     const salary = salaryEl.length ? cleanText(salaryEl.text()) : extractSalary($el.text());
