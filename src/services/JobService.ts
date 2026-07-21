@@ -1,7 +1,7 @@
 import { getJobRepository, initializeDatabase } from '../database/index.js';
 import { Job } from '../database/Job.js';
 import { ScrapedJobData, JobSource, JobSearchFilters } from '../types/job.js';
-import { isRemote } from '../utils/helpers.js';
+import { generateExternalId, isRemote } from '../utils/helpers.js';
 import { In, LessThan } from 'typeorm';
 
 export class JobService {
@@ -32,7 +32,6 @@ export class JobService {
         job.postedDate = jobData.postedDate || null;
         job.remote = isRemote(jobData.location);
         job.keywords = this.extractKeywords(jobData);
-        job.updatedAt = new Date();
       } else {
         job = repo.create({
           title: jobData.title,
@@ -58,8 +57,7 @@ export class JobService {
   }
 
   private generateExternalId(url: string, source: JobSource): string {
-    const hash = Buffer.from(url).toString('base64').slice(0, 50);
-    return `${source}_${hash}`;
+    return generateExternalId(url, source);
   }
 
   private extractKeywords(jobData: ScrapedJobData): string[] {
@@ -80,10 +78,11 @@ export class JobService {
     const qb = repo.createQueryBuilder('job');
 
     if (filters.keywords && filters.keywords.length > 0) {
-      qb.andWhere(
-        '(job.title ILIKE :kw OR job.description ILIKE :kw OR job.keywords @> ARRAY[:kw])',
-        { kw: `%${filters.keywords.join('%')}%` }
+      const conditions = filters.keywords.map((_, i) =>
+        `(job.title ILIKE :kw${i} OR job.description ILIKE :kw${i} OR job.company ILIKE :kw${i} OR job.keywords ILIKE :kw${i})`
       );
+      qb.andWhere(`(${conditions.join(' OR ')})`);
+      filters.keywords.forEach((keyword, i) => qb.setParameter(`kw${i}`, `%${keyword}%`));
     }
 
     if (filters.location) {
@@ -111,11 +110,7 @@ export class JobService {
     if (filters.maxAgeDays) {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - filters.maxAgeDays);
-      qb.andWhere('job.postedDate >= :cutoff', { cutoff: cutoffDate });
-    }
-
-    if (filters.minSalary) {
-      qb.andWhere('job.salary IS NOT NULL');
+      qb.andWhere('(job.postedDate >= :cutoff OR job.postedDate IS NULL)', { cutoff: cutoffDate });
     }
 
     qb.andWhere('job.postedToDiscord = false');

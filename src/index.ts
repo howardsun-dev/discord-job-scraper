@@ -4,7 +4,7 @@ import { Client, EmbedBuilder, Events, GatewayIntentBits } from 'discord.js';
 import { jobService } from './services/JobService.js';
 import { scraperScheduler } from './jobs/ScraperScheduler.js';
 import { scraperManager } from './scrapers/index.js';
-import { JobSearchFilters } from './types/job.js';
+import { JOB_SOURCES, type JobSearchFilters, type JobSource } from './types/job.js';
 
 const client = new Client({
   intents: [
@@ -48,37 +48,43 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const remoteOnly = interaction.options.getBoolean('remote_only') ?? false;
       const source = interaction.options.getString('source');
       const scrapeNow = interaction.options.getBoolean('scrape_now') ?? false;
+      const selectedSource = source && source !== 'all' && JOB_SOURCES.includes(source as JobSource)
+        ? source as JobSource
+        : undefined;
 
       try {
         if (scrapeNow) {
           await interaction.editReply('🔍 Scraping job boards now. This can take a minute...');
           await scraperManager.initialize();
-          const scrapedJobs = await scraperManager.scrapeAllSources(
-            keywords,
-            location,
-            source && source !== 'all' ? { sources: [source as any] } : {},
-            1
-          );
+          try {
+            const scrapedJobs = await scraperManager.scrapeAllSources(
+              keywords,
+              location,
+              selectedSource ? { sources: [selectedSource] } : {},
+              1
+            );
 
-          const bySource = new Map<string, typeof scrapedJobs>();
-          for (const job of scrapedJobs) {
-            if (!job.source) continue;
-            const sourceJobs = bySource.get(job.source) || [];
-            sourceJobs.push(job);
-            bySource.set(job.source, sourceJobs);
-          }
+            const bySource = new Map<JobSource, typeof scrapedJobs>();
+            for (const job of scrapedJobs) {
+              if (!job.source) continue;
+              const sourceJobs = bySource.get(job.source) || [];
+              sourceJobs.push(job);
+              bySource.set(job.source, sourceJobs);
+            }
 
-          for (const [jobSource, sourceJobs] of bySource) {
-            await jobService.saveJobs(sourceJobs, jobSource as any);
+            for (const [jobSource, sourceJobs] of bySource) {
+              await jobService.saveJobs(sourceJobs, jobSource);
+            }
+          } finally {
+            await scraperManager.close();
           }
-          await scraperManager.close();
         }
 
         const filters: JobSearchFilters = {
           keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
           location,
           remoteOnly,
-          sources: source && source !== 'all' ? [source as any] : undefined,
+          sources: selectedSource ? [selectedSource] : undefined,
           maxAgeDays: 14,
         };
 

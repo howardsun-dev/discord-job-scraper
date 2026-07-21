@@ -1,5 +1,5 @@
 import { BaseScraper } from './BaseScraper.js';
-import { ScraperConfig, ScrapedJobData, JobSource } from '../types/job.js';
+import { ScraperConfig, ScrapedJobData, JobSource, JobSearchFilters } from '../types/job.js';
 import { cleanText, extractSalary, parsePostedDate, buildSearchUrl } from '../utils/helpers.js';
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';
@@ -81,16 +81,20 @@ export class GlassdoorScraper extends BaseScraper {
     };
   }
 
-  async searchJobs(keywords: string, location: string, maxPages = 3): Promise<ScrapedJobData[]> {
-    const searchUrl = buildSearchUrl(this.config.baseUrl, this.config.searchPath, {
+  async searchJobs(
+    keywords: string,
+    location: string,
+    maxPages = 3,
+    filters: JobSearchFilters = {},
+  ): Promise<ScrapedJobData[]> {
+    const params: Record<string, string> = {
       sc: 'keyword',
       locT: 'C',
-      locId: '',
-      jobType: '',
-      fromAge: '7', // Past week
       keyword: keywords,
-      location: location,
-    });
+      location,
+    };
+    if (filters.maxAgeDays) params.fromAge = String(filters.maxAgeDays);
+    const searchUrl = buildSearchUrl(this.config.baseUrl, this.config.searchPath, params);
     return this.scrape(searchUrl, maxPages);
   }
 }

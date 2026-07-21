@@ -1,6 +1,6 @@
 import { BaseScraper } from './BaseScraper.js';
 import { ScraperConfig, ScrapedJobData, JobSource } from '../types/job.js';
-import { cleanText, extractSalary, parsePostedDate, buildSearchUrl } from '../utils/helpers.js';
+import { cleanText, extractSalary, parsePostedDate, buildSearchUrl, resolveJobUrl } from '../utils/helpers.js';
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';
 
@@ -8,14 +8,14 @@ const INDEED_CONFIG: ScraperConfig = {
   baseUrl: 'https://www.indeed.com',
   searchPath: '/jobs',
   selectors: {
-    jobCard: '[data-jk]',
-    title: '[data-testid="job-title"]',
+    jobCard: '.job_seen_beacon',
+    title: 'a[data-jk]',
     company: '[data-testid="company-name"]',
-    location: '[data-testid="job-location"]',
-    description: '[data-testid="job-snippet"]',
-    url: 'a.jcs-JobTitle',
-    salary: '[data-testid="salary"]',
-    postedDate: '[data-testid="job-age"]',
+    location: '[data-testid="text-location"]',
+    description: '.job-snippet, [data-testid="job-snippet"]',
+    url: 'a[data-jk]',
+    salary: '[data-testid*="salary-snippet-container"]',
+    postedDate: '.date, [data-testid="job-age"]',
   },
   pagination: {
     type: 'query',
@@ -47,9 +47,6 @@ export class IndeedScraper extends BaseScraper {
 
   protected extractJobData($: cheerio.CheerioAPI, element: AnyNode): ScrapedJobData | null {
     const $el = $(element);
-    const jobId = $el.attr('data-jk');
-    if (!jobId) return null;
-
     const titleEl = $el.find(this.config.selectors.title);
     const companyEl = $el.find(this.config.selectors.company);
     const locationEl = $el.find(this.config.selectors.location);
@@ -57,12 +54,14 @@ export class IndeedScraper extends BaseScraper {
     const urlEl = $el.find(this.config.selectors.url);
     const salaryEl = $el.find(this.config.selectors.salary);
     const dateEl = $el.find(this.config.selectors.postedDate);
+    const jobId = titleEl.attr('data-jk');
+    if (!jobId) return null;
 
     const title = cleanText(titleEl.text());
     const company = cleanText(companyEl.text());
     const location = cleanText(locationEl.text());
-    const description = cleanText(descEl.text());
-    const url = urlEl.attr('href') ? `https://www.indeed.com${urlEl.attr('href')}` : '';
+    const description = cleanText(descEl.text()) || cleanText($el.text());
+    const url = resolveJobUrl(urlEl.attr('href'), this.config.baseUrl);
     const salary = salaryEl.length ? cleanText(salaryEl.text()) : extractSalary($el.text());
     const postedDate = dateEl.length ? parsePostedDate(dateEl.text()) : null;
 

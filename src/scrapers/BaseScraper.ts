@@ -2,22 +2,19 @@ import { Browser, launch } from 'puppeteer';
 import * as cheerio from 'cheerio';
 import axios, { AxiosInstance } from 'axios';
 import UserAgent from 'user-agents';
-import { ScraperConfig, ScrapedJobData, JobSource } from '../types/job.js';
-import { randomDelay } from '../utils/helpers.js';
+import { ScraperConfig, ScrapedJobData, JobSource, JobSearchFilters } from '../types/job.js';
+import { generateExternalId, randomDelay } from '../utils/helpers.js';
 import type { AnyNode } from 'domhandler';
 
 export abstract class BaseScraper {
   protected browser: Browser | null = null;
   protected axiosClient: AxiosInstance;
-  protected userAgent: UserAgent;
   protected config: ScraperConfig;
 
   constructor(config: ScraperConfig) {
     this.config = config;
-    this.userAgent = new UserAgent({ deviceCategory: 'desktop' });
     this.axiosClient = axios.create({
       headers: {
-        'User-Agent': this.userAgent.toString(),
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Accept-Encoding': 'gzip, deflate',
@@ -29,9 +26,16 @@ export abstract class BaseScraper {
 
   abstract getSource(): JobSource;
 
-  abstract searchJobs(keywords: string, location: string, maxPages?: number): Promise<ScrapedJobData[]>;
+  abstract searchJobs(
+    keywords: string,
+    location: string,
+    maxPages?: number,
+    filters?: JobSearchFilters,
+  ): Promise<ScrapedJobData[]>;
 
   async initialize(): Promise<void> {
+    if (!this.requiresBrowser()) return;
+
     const launchOptions = {
       headless: true,
       args: [
@@ -59,7 +63,7 @@ export abstract class BaseScraper {
       throw new Error('Browser not initialized');
     }
     const page = await this.browser.newPage();
-    await page.setUserAgent(this.userAgent.toString());
+    await page.setUserAgent(new UserAgent({ deviceCategory: 'desktop' }).toString());
     await page.setViewport({ width: 1366, height: 768 });
     
     try {
@@ -75,7 +79,9 @@ export abstract class BaseScraper {
   protected async fetchWithAxios(url: string): Promise<string> {
     try {
       await randomDelay(this.config.rateLimitMs, this.config.rateLimitMs * 2);
-      const response = await this.axiosClient.get(url);
+      const response = await this.axiosClient.get(url, {
+        headers: { 'User-Agent': new UserAgent({ deviceCategory: 'desktop' }).toString() },
+      });
       return response.data;
     } catch (error) {
       console.error(`[${this.getSource()}] Axios fetch failed for ${url}:`, error);
@@ -152,7 +158,6 @@ export abstract class BaseScraper {
   }
 
   protected generateExternalId(url: string): string {
-    const hash = Buffer.from(url).toString('base64').slice(0, 50);
-    return `${this.getSource()}_${hash}`;
+    return generateExternalId(url, this.getSource());
   }
 }

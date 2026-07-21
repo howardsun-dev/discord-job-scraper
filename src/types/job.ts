@@ -1,18 +1,5 @@
-export interface JobListing {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  description: string;
-  url: string;
-  source: JobSource;
-  postedDate: Date;
-  salary?: string;
-  remote: boolean;
-  keywords: string[];
-}
-
-export type JobSource = 'indeed' | 'linkedin' | 'glassdoor' | 'reddit';
+export const JOB_SOURCES = ['indeed', 'linkedin', 'glassdoor', 'reddit'] as const;
+export type JobSource = (typeof JOB_SOURCES)[number];
 
 export interface JobSearchFilters {
   keywords?: string[];
@@ -21,7 +8,6 @@ export interface JobSearchFilters {
   excludeKeywords?: string[];
   sources?: JobSource[];
   maxAgeDays?: number;
-  minSalary?: number;
 }
 
 export interface ScrapedJobData {

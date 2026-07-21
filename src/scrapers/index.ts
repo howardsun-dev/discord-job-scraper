@@ -4,6 +4,8 @@ import { GlassdoorScraper } from './GlassdoorScraper.js';
 import { BaseScraper } from './BaseScraper.js';
 import { JobSource, ScrapedJobData, JobSearchFilters } from '../types/job.js';
 
+const DEFAULT_SCRAPER_SOURCES: JobSource[] = ['indeed', 'linkedin', 'glassdoor'];
+
 export class ScraperManager {
   private scrapers: Map<JobSource, BaseScraper> = new Map();
   private initialized = false;
@@ -54,7 +56,7 @@ export class ScraperManager {
     filters: JobSearchFilters = {},
     maxPages = 2
   ): Promise<ScrapedJobData[]> {
-    const sources = filters.sources || ['indeed', 'linkedin', 'glassdoor'];
+    const sources = filters.sources || DEFAULT_SCRAPER_SOURCES;
     const allJobs: ScrapedJobData[] = [];
 
     for (const source of sources) {
@@ -66,7 +68,7 @@ export class ScraperManager {
 
       try {
         console.log(`🔍 Scraping ${source} for "${keywords}" in "${location}"...`);
-        const jobs = await scraper.searchJobs(keywords, location, maxPages);
+        const jobs = await scraper.searchJobs(keywords, location, maxPages, filters);
         console.log(`✅ ${source}: Found ${jobs.length} jobs`);
         allJobs.push(...jobs);
       } catch (error) {

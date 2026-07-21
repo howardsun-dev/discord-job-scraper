@@ -7,7 +7,7 @@ import {
   Index,
   Unique,
 } from 'typeorm';
-import { JobSource } from '../types/job';
+import { JOB_SOURCES, type JobSource } from '../types/job.js';
 
 @Entity('jobs')
 @Unique(['source', 'externalId'])
@@ -17,51 +17,51 @@ export class Job {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ length: 500 })
+  @Column({ type: 'varchar', length: 500 })
   title!: string;
 
-  @Column({ length: 200 })
+  @Column({ type: 'varchar', length: 200 })
   company!: string;
 
-  @Column({ length: 200 })
+  @Column({ type: 'varchar', length: 200 })
   location!: string;
 
-  @Column('text')
+  @Column({ type: 'text' })
   description!: string;
 
-  @Column({ length: 1000 })
+  @Column({ type: 'varchar', length: 1000 })
   url!: string;
 
   @Column({
     type: 'enum',
-    enum: ['indeed', 'linkedin', 'glassdoor', 'reddit'],
+    enum: JOB_SOURCES,
   })
   source!: JobSource;
 
-  @Column({ length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   externalId!: string;
 
   @Column({ type: 'timestamp', nullable: true })
   postedDate!: Date | null;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   salary!: string | null;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   remote!: boolean;
 
   @Column('simple-array', { nullable: true })
-  keywords!: string[];
+  keywords!: string[] | null;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   postedToDiscord!: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
   postedAt!: Date | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt!: Date;
 }

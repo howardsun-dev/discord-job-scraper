@@ -1,14 +1,14 @@
 import { BaseScraper } from './BaseScraper.js';
-import { ScraperConfig, ScrapedJobData, JobSource } from '../types/job.js';
+import { ScraperConfig, ScrapedJobData, JobSource, JobSearchFilters } from '../types/job.js';
 import { cleanText, extractSalary, parsePostedDate, buildSearchUrl } from '../utils/helpers.js';
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';
 
 const LINKEDIN_CONFIG: ScraperConfig = {
   baseUrl: 'https://www.linkedin.com',
-  searchPath: '/jobs/search',
+  searchPath: '/jobs-guest/jobs/api/seeMoreJobPostings/search',
   selectors: {
-    jobCard: '[data-job-id]',
+    jobCard: '.base-search-card[data-entity-urn]',
     title: '.base-search-card__title',
     company: '.base-search-card__subtitle',
     location: '.job-search-card__location',
@@ -42,12 +42,12 @@ export class LinkedInScraper extends BaseScraper {
   }
 
   protected requiresBrowser(): boolean {
-    return true;
+    return false;
   }
 
   protected extractJobData($: cheerio.CheerioAPI, element: AnyNode): ScrapedJobData | null {
     const $el = $(element);
-    const jobId = $el.attr('data-job-id');
+    const jobId = $el.attr('data-entity-urn');
     if (!jobId) return null;
 
     const titleEl = $el.find(this.config.selectors.title);
@@ -62,7 +62,8 @@ export class LinkedInScraper extends BaseScraper {
     const company = cleanText(companyEl.text());
     const location = cleanText(locationEl.text());
     const description = cleanText(descEl.text());
-    const url = urlEl.attr('href') ? urlEl.attr('href')!.split('?')[0] : '';
+    const href = urlEl.attr('href');
+    const url = href ? href.split('?')[0] : '';
     const salary = salaryEl.length ? cleanText(salaryEl.text()) : extractSalary($el.text());
     const postedDate = dateEl.length ? parsePostedDate(dateEl.attr('datetime') || dateEl.text()) : null;
 
@@ -79,13 +80,19 @@ export class LinkedInScraper extends BaseScraper {
     };
   }
 
-  async searchJobs(keywords: string, location: string, maxPages = 3): Promise<ScrapedJobData[]> {
-    const searchUrl = buildSearchUrl(this.config.baseUrl, this.config.searchPath, {
+  async searchJobs(
+    keywords: string,
+    location: string,
+    maxPages = 3,
+    filters: JobSearchFilters = {},
+  ): Promise<ScrapedJobData[]> {
+    const params: Record<string, string> = {
       keywords,
       location,
-      f_TPR: 'r604800', // Past week
-      f_WT: '2', // Remote
-    });
+    };
+    if (filters.maxAgeDays) params.f_TPR = `r${filters.maxAgeDays * 86400}`;
+    if (filters.remoteOnly) params.f_WT = '2';
+    const searchUrl = buildSearchUrl(this.config.baseUrl, this.config.searchPath, params);
     return this.scrape(searchUrl, maxPages);
   }
 }

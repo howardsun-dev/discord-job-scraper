@@ -27,14 +27,18 @@ export class ScraperScheduler {
     enabled: true,
   };
 
-  constructor() {}
-
   start(config?: Partial<ScraperJobConfig>): void {
     const finalConfig = { ...this.defaultConfig, ...config };
     
     if (!finalConfig.enabled) {
       console.log('⏸️ Scraper scheduler disabled');
       return;
+    }
+
+    const existingTask = this.jobs.get('default');
+    if (existingTask) {
+      existingTask.stop();
+      this.jobs.delete('default');
     }
 
     const task = cron.schedule(finalConfig.schedule, async () => {

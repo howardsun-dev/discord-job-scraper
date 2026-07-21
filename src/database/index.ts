@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import 'dotenv/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Job } from './Job.js';
@@ -12,7 +13,9 @@ const config: DataSourceOptions = {
   entities: [Job],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_SSL === 'true'
+    ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+    : false,
 };
 
 export const AppDataSource = new DataSource(config);
@@ -32,5 +35,8 @@ export async function initializeDatabase(): Promise<DataSource> {
 }
 
 export function getJobRepository() {
+  if (!AppDataSource.isInitialized) {
+    throw new Error('Database not initialized: call initializeDatabase() before getJobRepository()');
+  }
   return AppDataSource.getRepository(Job);
 }

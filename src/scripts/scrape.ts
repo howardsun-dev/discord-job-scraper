@@ -3,18 +3,18 @@ import 'dotenv/config';
 import { scraperManager } from '../scrapers/index.js';
 import { jobService } from '../services/JobService.js';
 import { JobSource } from '../types/job.js';
+import { positiveInteger } from '../utils/helpers.js';
 
 const keywords = process.argv[2] || process.env.DEFAULT_KEYWORDS || 'software engineer';
 const location = process.argv[3] || process.env.DEFAULT_LOCATION || 'remote';
-const maxPages = parseInt(process.env.SCRAPER_MAX_PAGES || '1', 10);
+const maxPages = positiveInteger(process.env.SCRAPER_MAX_PAGES, 1);
 
 async function main() {
   console.log(`🔍 Manual scrape: "${keywords}" in "${location}" (${maxPages} page(s) per source)`);
 
-  await jobService.initialize();
-  await scraperManager.initialize();
-
   try {
+    await jobService.initialize();
+    await scraperManager.initialize();
     const jobs = await scraperManager.scrapeAllSources(keywords, location, {}, maxPages);
     const bySource = new Map<JobSource, typeof jobs>();
 
