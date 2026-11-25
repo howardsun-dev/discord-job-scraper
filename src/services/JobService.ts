@@ -17,7 +17,15 @@ export class JobService {
     const repo = getJobRepository();
     const savedJobs: Job[] = [];
 
-    for (const jobData of jobs) {
+    for (const raw of jobs) {
+      // Free-text sources (HN, Reddit) can exceed the varchar sizes declared in Job.ts.
+      const jobData = {
+        ...raw,
+        title: raw.title.slice(0, 500),
+        company: raw.company.slice(0, 200),
+        location: raw.location.slice(0, 200),
+        salary: raw.salary?.slice(0, 200),
+      };
       const externalId = this.generateExternalId(jobData.url, source);
       
       let job = await repo.findOne({ where: { source, externalId } });

@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Job } from './Job.js';
 import { CreateJobsTable1784650000000 } from './migrations/1784650000000-CreateJobsTable.js';
+import { AddJobSources1795000000000 } from './migrations/1795000000000-AddJobSources.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -14,7 +15,7 @@ const config: DataSourceOptions = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'jobscraper',
   entities: [Job],
-  migrations: [CreateJobsTable1784650000000],
+  migrations: [CreateJobsTable1784650000000, AddJobSources1795000000000],
   migrationsRun: isProduction && process.env.DB_RUN_MIGRATIONS !== 'false',
   synchronize: !isProduction,
   logging: process.env.NODE_ENV === 'development',

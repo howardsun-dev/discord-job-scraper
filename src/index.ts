@@ -96,7 +96,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const embeds = jobs.map((job) =>
           new EmbedBuilder()
-            .setTitle(job.title)
+            .setTitle(job.title.slice(0, 256)) // Discord rejects embed titles over 256 chars
             .setURL(job.url)
             .setDescription(job.description.slice(0, 500) || 'No description available')
             .addFields(

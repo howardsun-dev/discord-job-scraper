@@ -32,7 +32,10 @@
 - **Rich Embed Formatting** - Professional job postings with company, location, apply links
 
 ###�� Web Scraping Engine
-- **Multi-Source Support** - LinkedIn, Indeed, Glassdoor (planned)
+- **Multi-Source Support** - LinkedIn, Indeed, Glassdoor, Built In, RemoteOK, Remotive, We Work Remotely, HN "Who is Hiring", Reddit job subreddits
+  - Feed sources (RemoteOK, Remotive, WWR, HN, Reddit) are fetched once per run and filtered by keyword locally
+  - Reddit needs `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` (script app) on most networks; only `[Hiring]` posts are kept
+  - Not supported: Monster (DataDome captcha) and Welcome to the Jungle (blocks headless browsers; data comes from a private Algolia index)
 - **Headless Browser Automation** - Puppeteer for dynamic content handling
 - **Anti-Bot Measures** - User agent rotation, delay randomization
 - **Data Validation** - Structured job data parsing and cleaning

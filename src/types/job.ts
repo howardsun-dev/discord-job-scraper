@@ -1,4 +1,14 @@
-export const JOB_SOURCES = ['indeed', 'linkedin', 'glassdoor', 'reddit'] as const;
+export const JOB_SOURCES = [
+  'indeed',
+  'linkedin',
+  'glassdoor',
+  'reddit',
+  'builtin',
+  'remoteok',
+  'remotive',
+  'weworkremotely',
+  'hackernews',
+] as const;
 export type JobSource = (typeof JOB_SOURCES)[number];
 
 export interface JobSearchFilters {

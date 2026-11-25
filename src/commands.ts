@@ -46,6 +46,12 @@ export const commands: SlashCommand[] = [
           { name: 'Indeed', value: 'indeed' },
           { name: 'LinkedIn', value: 'linkedin' },
           { name: 'Glassdoor', value: 'glassdoor' },
+          { name: 'Reddit', value: 'reddit' },
+          { name: 'Built In', value: 'builtin' },
+          { name: 'RemoteOK', value: 'remoteok' },
+          { name: 'Remotive', value: 'remotive' },
+          { name: 'We Work Remotely', value: 'weworkremotely' },
+          { name: 'HN Who is Hiring', value: 'hackernews' },
         ),
     )
     .addBooleanOption((option) =>

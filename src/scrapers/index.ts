@@ -1,10 +1,16 @@
 import { IndeedScraper } from './IndeedScraper.js';
 import { LinkedInScraper } from './LinkedInScraper.js';
 import { GlassdoorScraper } from './GlassdoorScraper.js';
+import { RedditScraper } from './RedditScraper.js';
+import { BuiltInScraper } from './BuiltInScraper.js';
+import { RemoteOkScraper } from './RemoteOkScraper.js';
+import { RemotiveScraper } from './RemotiveScraper.js';
+import { WeWorkRemotelyScraper } from './WeWorkRemotelyScraper.js';
+import { HackerNewsScraper } from './HackerNewsScraper.js';
 import { BaseScraper } from './BaseScraper.js';
-import { JobSource, ScrapedJobData, JobSearchFilters } from '../types/job.js';
+import { JOB_SOURCES, JobSource, ScrapedJobData, JobSearchFilters } from '../types/job.js';
 
-const DEFAULT_SCRAPER_SOURCES: JobSource[] = ['indeed', 'linkedin', 'glassdoor'];
+const DEFAULT_SCRAPER_SOURCES: readonly JobSource[] = JOB_SOURCES;
 
 export class ScraperManager {
   private scrapers: Map<JobSource, BaseScraper> = new Map();
@@ -15,6 +21,12 @@ export class ScraperManager {
     this.scrapers.set('indeed', new IndeedScraper());
     this.scrapers.set('linkedin', new LinkedInScraper());
     this.scrapers.set('glassdoor', new GlassdoorScraper());
+    this.scrapers.set('reddit', new RedditScraper());
+    this.scrapers.set('builtin', new BuiltInScraper());
+    this.scrapers.set('remoteok', new RemoteOkScraper());
+    this.scrapers.set('remotive', new RemotiveScraper());
+    this.scrapers.set('weworkremotely', new WeWorkRemotelyScraper());
+    this.scrapers.set('hackernews', new HackerNewsScraper());
   }
 
   async initialize(): Promise<void> {

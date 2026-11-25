@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import * as cheerio from 'cheerio';
 import type { JobSource } from '../types/job.js';
 
 export function randomDelay(minMs: number, maxMs: number): Promise<void> {
@@ -137,4 +138,18 @@ export function positiveInteger(value: string | undefined, fallback: number): nu
 
 export function escapeLikePattern(value: string): string {
   return value.replace(/[!%_]/g, '!$&');
+}
+export function htmlToText(html: string): string {
+  return cleanText(cheerio.load(html).text());
+}
+
+/** Feed sources return everything; keep posts mentioning any comma-separated keyword phrase. */
+export function matchesKeywords(text: string, keywords: string): boolean {
+  const phrases = keywords.toLowerCase().split(',').map((k) => k.trim()).filter(Boolean);
+  if (phrases.length === 0) return true;
+  // Whole-word match ("java" must not hit "javascript"); lookarounds instead of \b so "c++" works.
+  return phrases.some((phrase) => {
+    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'i').test(text);
+  });
 }
